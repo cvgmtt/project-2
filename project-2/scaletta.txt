@@ -1,0 +1,39 @@
+1. acquisire i frame
+
+2. feature detection
+	acquisire un ottava
+		l'ottava va analizzata a differenti risoluzioni (rad2 per ogni passaggio)  massimo 5 immagini
+		otteniamo quindi 4 dog (differenze gaussiane) nelle quali individuiamo gli extrema, che sono dei punti nei quali i pixel variano molto tuttavia la posizione e la struttura rimane stabile anche a differenti sfocature dell'immagine, si rintracciano ad esempio nei bordi
+	acquisire fino a un massimo di altre 3 ottave. quando si passa da un ottava all'altra la risoluzione dell'immagine viene dimezzata. questo affinchè la stessa immagine possa essre studiata a diversi livelli di sfocatura.
+
+3.match keypoint
+	prendere due frame consecuitivi (fn-1) e (fn)
+		matchare i keypoints del primo al secondo, usando nearest neighbor (ossia il punto del secondo frame più vicino al punto del primo frame)
+			calcolare la distanza
+		prendere poi il secondo neighbor
+			calcolare la distanza
+		fare il rapporto tra il primo e il secondo. piu il rapporto tende a 1 e piu i due valori sono simili e quindi più probabilmente il keypoint non è attendibile
+		più il rapporto tende a 0 e più la distanza tra il primo puntio e second neighbour è grande e quindi nearest neighbour è affidabile.
+		impostare come threshold per il rapporto 0.6
+			se minore prendere in considerazione 
+			se maggiore scartare 
+
+potrebbe non essere necessario:
+4.filter keypoints 
+	-filtrare le feature che presentano una distanza euclidea superiore di una soglia fissata
+	-operare una stima delle coordinate dei feature points per ciascuna feature rimasta usando questa formula:
+	\cases{ x_{f}=x_{i}\lambda\cos\theta-y_{i}\lambda\sin\theta+T_{x}\cr y_{f}=x_{i}\lambda\sin\theta+y_{i}\lambda\cos\theta+T_{y} }\eqno{\hbox{(1)}}
+	-xf e yf sono le coordinate stimate 
+	-fare una prima stima del movimento generale usando least square method
+		-
+	calcolare l'errore:	
+		sottraendo sotto radice l'effettiva coordinata x e y alle coordinate stimate DEL MOVIMENTO GENERALE (distanza euclidea)
+		valutare se calcolare anche l'errore in angoli (teta effettivo- teta stimato)
+			-
+	-salvare questo errore
+	-calcolare l'errore cumulativo:
+	E_{n}^{cum}(k)=(1-\alpha)E_{n-1}^{cum}(k)+\alpha E_{n}(k)\eqno{\hbox{(2)}}
+	la a varia da 0 a 1. più è vicina a 1 e meno contano gli errori cumulati e più contano quelli attuali. viceversa il contrario.poniamo a = o.35
+	-stila una classifica e considera solo la metà nella parte piu alta della classifica. se una feature viene identificata per la prima volta, si calcola l'errore e lo si salva ma non lo si confronta ancora con gli altri in classifica e quindi non si usa
+	-calcolare il movimento globale affidabile usando i feature points rimasti
+
